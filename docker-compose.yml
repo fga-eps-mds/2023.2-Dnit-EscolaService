@@ -1,14 +1,37 @@
 version: "3.0"
 services:
   escola-service:
+    depends_on:
+      dnit-escola-db:
+        condition: service_healthy
     build:
       context: .
     ports:
       - "7084:7084"
     container_name: escolaService
     volumes:
-      - ./app:/app/app
-      - ./api:/api
-      - ./test:/app/test
+      - ./:/app
+    environment:
+      - MODE=container
     env_file:
       - .env
+
+  dnit-escola-db:
+    container_name: dnit-escola-db
+    image: postgres:15.4
+    restart: always
+    environment:
+      POSTGRES_DB: escolaservice
+      POSTGRES_PASSWORD: 1234
+    ports:
+      - "5444:5432"
+    volumes:
+      - pg-data-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  pg-data-volume:

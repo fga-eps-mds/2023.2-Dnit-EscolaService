@@ -1,56 +1,35 @@
-name: Deploy AWS
-
+name: Deploy
 on:
-  workflow_dispatch:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches:
+      - develop
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
-   
-    - name: Setup .NET Core
+    - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: '6.0.x'
-    
-    - name: Install dependencies
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
       run: dotnet restore
-    
     - name: Build
-      run: dotnet build --configuration Release --no-restore
-    
+      run: dotnet build --no-restore
     - name: Test
-      run: dotnet test --no-restore --verbosity normal
+      run: dotnet test --no-build --verbosity normal
 
     - name: Publish
-      run: dotnet publish -c Release -o '${{ github.workspace }}/out'
+      run: dotnet publish --no-restore -r linux-x64 -p:PublishSingleFile=true --self-contained false -o build app
 
-    - name: Create email service .env
-      run: |
-        echo 'EMAIL_SERVICE_ADDRESS=${{ secrets.EMAIL_SERVICE_ADDRESS }}' > '${{ github.workspace }}/out/.env'
-        echo 'EMAIL_SERVICE_PASSWORD=${{ secrets.EMAIL_SERVICE_PASSWORD }}' >> '${{ github.workspace }}/out/.env'
-        echo 'EMAIL_DNIT=${{ secrets.EMAIL_DNIT }}' >> '${{ github.workspace }}/out/.env'
-  
-    - name: Zip Package
-      run: |
-        cd ${{ github.workspace }}/out 
-        zip -r ${{ github.workspace }}/out.zip * .env
+    - name: Compress
+      run: tar -czvf build.tar.gz ./build
 
-    - name: Deploy to EB
-      uses: einaregilsson/beanstalk-deploy@v21
-      with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        application_name: back-dnit-escola
-        environment_name: Back-dnit-escola-env
-        region: us-east-1
-        version_label: ${{ github.run_id }}
-        version_description: ${{ github.sha }}
-        deployment_package: ${{ github.workspace }}/out.zip
+    - name: Upload Build
+      env:
+        DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+        DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+      run: |
+        curl --fail -X POST -L -F "file=@build.tar.gz"  $DEPLOY_URL/build_`git rev-parse HEAD`.tar.gz -H "upload-token: $DEPLOY_TOKEN"
