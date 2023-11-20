@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel;
+using System.Text.Json.Serialization;
 
 namespace api
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum UF
     {
         [Description("Acre")]
@@ -60,12 +62,14 @@ namespace api
         DF
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Localizacao
     {
         Rural = 1,
         Urbana,
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Porte
     {
         [Description("Até 50 matrículas de escolarização")]
@@ -92,6 +96,7 @@ namespace api
         EscolaCritica,
     }
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum Rede
     {
         Municipal = 1,
@@ -120,6 +125,12 @@ namespace api
         EscolaNaoEncontrada,
         [Description("Municipio não encontrado")]
         MunicipioNaoEncontrado,
+        [Description("Superintendência não encontrada")]
+        SuperIntendenciaNaoEncontrada,
+        [Description("Já tem um ranque sendo calculado, tente novamente mais tarde")]
+        RanqueJaSendoCalculado,
+        [Description("Formato JSON não reconhecido")]
+        FormatoJsonNaoReconhecido,
     }
 
     public enum Permissao
@@ -135,5 +146,12 @@ namespace api
 
         [Description("Visualizar Escola")]
         EscolaVisualizar = 1003,
+
+        [Description("Visualizar Ranking de Escolas")]
+        RanqueVisualizar = 5002,
+        [Description("Calcular Ranking de Escolas")]
+        RanqueCalcular = 5003,
+        [Description("Calcular Ranking de Escolas")]
+        RanquePollProcessamento = 5004,
     }
 }

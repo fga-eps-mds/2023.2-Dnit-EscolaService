@@ -6,8 +6,10 @@ using EnumsNET;
 using api;
 using app.Repositorios.Interfaces;
 using api.Escolas;
+using System.Globalization;
 using System.Data;
 using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace app.Services
 {
@@ -15,20 +17,27 @@ namespace app.Services
     {
         private readonly IEscolaRepositorio escolaRepositorio;
         private readonly IMunicipioRepositorio municipioRepositorio;
+        private readonly ISuperintendenciaRepositorio superIntendenciaRepositorio;
+        private readonly IRanqueService ranqueService;
         private readonly ModelConverter modelConverter;
         private readonly AppDbContext dbContext;
+        private const double raioTerraEmKm = 6371.0;
 
         public EscolaService(
             IEscolaRepositorio escolaRepositorio,
             IMunicipioRepositorio municipioRepositorio,
+            IRanqueService ranqueService,
             ModelConverter modelConverter,
-            AppDbContext dbContext
+            AppDbContext dbContext,
+            ISuperintendenciaRepositorio superIntendenciaRepositorio
         )
         {
             this.escolaRepositorio = escolaRepositorio;
             this.municipioRepositorio = municipioRepositorio;
+            this.ranqueService = ranqueService;
             this.modelConverter = modelConverter;
             this.dbContext = dbContext;
+            this.superIntendenciaRepositorio = superIntendenciaRepositorio;
         }
 
         public bool SuperaTamanhoMaximo(MemoryStream planilha)
@@ -43,15 +52,56 @@ namespace app.Services
                 return quantidade_escolas > tamanho_max;
             }
         }
+        
+        private async Task<(Superintendencia?, double)> CalcularSuperintendenciaMaisProxima(string? lat, string? lon)
+        {
+            var culture = new CultureInfo("pt-BR");
+            
+            var latVazia = lat == null || lat == "";
+            var lonVazia = lon == null || lon == "";
+            if (latVazia || lonVazia)
+                return (null, 0);
+            
+            return await CalcularSuperintendenciaMaisProxima(double.Parse(lat, culture), double.Parse(lon, culture));
+        }
+        
+        private async Task<(Superintendencia, double)> CalcularSuperintendenciaMaisProxima(double lat, double lon)
+        {
+            var culture = new CultureInfo("pt-BR");
+            var superintendencias = await superIntendenciaRepositorio.ListarAsync();
+            var superintendenciaProxima = 
+                superintendencias.Select(s => new
+                {
+                    Superintendencia = s,
+                    lat = double.Parse(s.Latitude, culture),
+                    lon = double.Parse(s.Longitude, culture),
+                })
+                .Select(s => new
+                {
+                    s.Superintendencia,
+                    Distancia = CalcularDistancia(lat, lon, s.lat, s.lon)
+                })
+                .MinBy(s => s.Distancia);
 
+            return (superintendenciaProxima.Superintendencia, superintendenciaProxima.Distancia);
+        }
+        
         public async Task CadastrarAsync(CadastroEscolaData cadastroEscolaData)
         {
             var municipioId = cadastroEscolaData.IdMunicipio ?? throw new ApiException(ErrorCodes.MunicipioNaoEncontrado);
             var municipio = await municipioRepositorio.ObterPorIdAsync(municipioId);
-            var escola = escolaRepositorio.Criar(cadastroEscolaData, municipio);
+            
+            var (superintendenciaMaisProxima, distanciaSuperintendecia) = await 
+                    CalcularSuperintendenciaMaisProxima(cadastroEscolaData.Latitude, cadastroEscolaData.Longitude);
+
+            var escola = escolaRepositorio.Criar(cadastroEscolaData, municipio, distanciaSuperintendecia, superintendenciaMaisProxima);
             cadastroEscolaData.IdEtapasDeEnsino
                 ?.Select(e => escolaRepositorio.AdicionarEtapaEnsino(escola, (EtapaEnsino)e))
                 ?.ToList();
+
+            // FIXME: seria melhor que fosse pedido apenas para calcular apenas
+            // os UPSs das escolas recém adicionadas.
+            await ranqueService.CalcularNovoRanqueAsync();
 
             await dbContext.SaveChangesAsync();
         }
@@ -96,6 +146,11 @@ namespace app.Services
                     }
                 }
             }
+
+            // FIXME: seria melhor que fosse pedido apenas para calcular apenas
+            // os UPSs das escolas recém adicionadas.
+            await ranqueService.CalcularNovoRanqueAsync();
+
             return escolasNovas;
         }
 
@@ -117,6 +172,13 @@ namespace app.Services
             escola.Porte = data.Porte;
             escola.DataAtualizacao = DateTimeOffset.Now;
 
+            var (superintendenciaMaisProxima, distanciaSuperintendecia) = await 
+                CalcularSuperintendenciaMaisProxima(escola.Latitude, escola.Longitude);
+
+            escola.SuperintendenciaId = superintendenciaMaisProxima?.Id;
+            escola.Superintendencia = superintendenciaMaisProxima;
+            escola.DistanciaSuperintendencia = distanciaSuperintendecia;
+            
             atualizarEtapasEnsino(escola, data.EtapasEnsino!);
             await dbContext.SaveChangesAsync();
         }
@@ -193,7 +255,7 @@ namespace app.Services
             var resultado = etapas_separadas.Select(e => etapas.GetValueOrDefault(e.ToLower())).Where(e => e != default(EtapaEnsino)).ToList();
             return resultado;
         }
-
+        
         public async Task AlterarDadosEscolaAsync(AtualizarDadosEscolaData dados)
         {
             var escola = await escolaRepositorio.ObterPorIdAsync(dados.IdEscola, incluirEtapas: true);
@@ -207,6 +269,13 @@ namespace app.Services
             escola.Observacao = dados.Observacao;
             escola.Situacao = (Situacao?)dados.IdSituacao;
 
+            var (superIntendenciaMaisProxima, distanciaSuper) = await
+                CalcularSuperintendenciaMaisProxima(escola.Latitude, escola.Longitude);
+
+            escola.Superintendencia = superIntendenciaMaisProxima;
+            escola.SuperintendenciaId = superIntendenciaMaisProxima?.Id;
+            escola.DistanciaSuperintendencia = distanciaSuper;
+            
             atualizarEtapasEnsino(escola, dados.IdEtapasDeEnsino.ConvertAll(e => (EtapaEnsino)e));
 
             await dbContext.SaveChangesAsync();
@@ -259,7 +328,7 @@ namespace app.Services
             {
                 escola.IdMunicipio = int.Parse(municipio);
             }
-
+            
             validaDadosCadastro(escola, obterValorLinha(linha, Coluna.EtapasEnsino));
             
             var escolaExistente = await escolaRepositorio.ObterPorCodigoAsync(escola.CodigoEscola);
@@ -269,11 +338,17 @@ namespace app.Services
                 return null;
             }
 
-            var escolaNova = escolaRepositorio.Criar(escola);
+
+            var superIntendenciaProxima = 
+                await CalcularSuperintendenciaMaisProxima(escola.Latitude, escola.Longitude);
+
+            
+            var escolaNova = escolaRepositorio.Criar(escola, superIntendenciaProxima.Item2, superIntendenciaProxima.Item1);
             foreach (var etapa in escola.EtapasEnsino)
             {
                 escolaRepositorio.AdicionarEtapaEnsino(escolaNova, etapa);
             }
+            
 
             return escolaNova;
         }
@@ -308,6 +383,27 @@ namespace app.Services
             {
                 throw new ArgumentNullException("Porte", "Erro. A leitura do arquivo parou na escola: " + escola.NomeEscola + ", descrição do porte inválida!");
             }
+        }
+        
+        public static double ConverterParaRadianos(double grau)
+        {
+            return grau * Math.PI / 180.0;
+        }
+
+        public double CalcularDistancia(double lat1, double long1, double lat2, double long2)
+        {
+            var diferencaLatitude = ConverterParaRadianos(lat2 - lat1);
+            var diferencaLongitude = ConverterParaRadianos(long2 - long1);
+
+            var primeiraParteFormula = Math.Sin(diferencaLatitude / 2) * Math.Sin(diferencaLatitude / 2) +
+                                       Math.Cos(ConverterParaRadianos(lat1)) * Math.Cos(ConverterParaRadianos(lat2)) *
+                                       Math.Sin(diferencaLongitude / 2) * Math.Sin(diferencaLongitude / 2);
+
+            var resultadoFormula = 2 * Math.Atan2(Math.Sqrt(primeiraParteFormula), Math.Sqrt(1 - primeiraParteFormula));
+
+            var distance = raioTerraEmKm * resultadoFormula;
+
+            return distance;
         }
     }
 

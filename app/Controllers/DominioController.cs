@@ -1,7 +1,5 @@
 ﻿using api;
 using api.Municipios;
-using app.Repositorios;
-using app.Repositorios.Interfaces;
 using app.Services;
 using Microsoft.AspNetCore.Mvc;
 using service.Interfaces;

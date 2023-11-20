@@ -51,13 +51,23 @@ namespace test.Stubs
             return municipiosDb;
         }
 
-        public static void Clear(this AppDbContext dbContext)
+        public static List<Superintendencia> PopulaSuperintendencias(this AppDbContext dbContext, int limit, int idStart = 1)
         {
-            dbContext.RemoveRange(dbContext.EscolaEtapaEnsino);
-            dbContext.RemoveRange(dbContext.Municipios);
-            dbContext.RemoveRange(dbContext.Escolas);
+            var superintendencias = SuperintendenciaStub.Listar(idStart).Take(limit).ToList();
+            dbContext.AddRange(superintendencias);
             dbContext.SaveChanges();
+            return superintendencias;
         }
 
+        public static void Clear(this AppDbContext dbContext)
+        {
+            dbContext.RemoveRange(dbContext.Escolas);
+            dbContext.RemoveRange(dbContext.EscolaEtapaEnsino);
+            dbContext.RemoveRange(dbContext.Municipios);
+            dbContext.RemoveRange(dbContext.EscolaRanques);
+            dbContext.RemoveRange(dbContext.Ranques);
+            dbContext.RemoveRange(dbContext.Superintendencias);
+            dbContext.SaveChanges();
+        }
     }
 }

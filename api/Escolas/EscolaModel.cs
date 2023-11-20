@@ -24,6 +24,7 @@ namespace api.Escolas
         public int? IdSituacao { get; set; }
         public string DescricaoSituacao { get; set; }
         public int? IdPorte { get; set; }
+        public string? DescricaoPorte { get; set; }
         public string Telefone { get; set; }
         public int NumeroTotalDeDocentes { get; set; }
         public string? SiglaUf { get; set; }
@@ -31,8 +32,10 @@ namespace api.Escolas
         public Rede? Rede { get; set; }
         public Porte? Porte { get; set; }
         public Localizacao? Localizacao { get; set; }
-
         public List<EtapaEnsino>? EtapasEnsino { get; set; }
         public Situacao? Situacao { get; set; }
+        public double DistanciaSuperintendencia { get; set; }
+        public int? SuperintendenciaId { get; set; }
+        public string? UfSuperintendencia { get; set; }
     }
 }

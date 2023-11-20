@@ -1,4 +1,5 @@
 version: "3.0"
+
 services:
   escola-service:
     depends_on:
@@ -8,13 +9,15 @@ services:
       context: .
     ports:
       - "7084:7084"
-    container_name: escolaService
+    container_name: escola-service
     volumes:
       - ./:/app
     environment:
       - MODE=container
     env_file:
       - .env
+    networks:
+      - dnit-network
 
   dnit-escola-db:
     container_name: dnit-escola-db
@@ -32,6 +35,14 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - dnit-network
 
 volumes:
   pg-data-volume:
+
+networks:
+  dnit-network:
+    name: dnit-network
+    driver: bridge
+    external: true

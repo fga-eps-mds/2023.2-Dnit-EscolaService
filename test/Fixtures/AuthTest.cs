@@ -1,50 +1,48 @@
-﻿using app.Controllers;
-using app.Entidades;
-using app.Repositorios;
-using app.Repositorios.Interfaces;
+﻿using api;
 using app.Services;
 using auth;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using service.Interfaces;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Xunit.Microsoft.DependencyInjection;
+using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
+using System.Security.Claims;
+using Xunit.Abstractions;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 
 namespace test.Fixtures
 {
-    public class Base : TestBedFixture
+    public class AuthTest : TestBed<Base>
     {
-        protected override void AddServices(IServiceCollection services, IConfiguration? configuration)
+        ClaimsPrincipal Usuario;
+        AuthService authService;
+
+        public AuthTest(ITestOutputHelper testOutputHelper, Base fixture) : base(testOutputHelper, fixture)
         {
-            // Para evitar a colisão durante a testagem paralela, o nome deve ser diferente para cada classe de teste
-            var databaseName = "DbInMemory" + Random.Shared.Next().ToString();
-            services.AddDbContext<AppDbContext>(o => o.UseInMemoryDatabase(databaseName));
-
-            // Repositorios
-            services.AddScoped<IEscolaRepositorio, EscolaRepositorio>();
-            services.AddScoped<IMunicipioRepositorio, MunicipioRepositorio>();
-
-            // Services
-            services.AddScoped<IEscolaService, EscolaService>();
-            services.AddScoped<IMunicipioService, MunicipioService>();
-            services.AddScoped<ISolicitacaoAcaoService, SolicitacaoAcaoService>();
-            services.AddSingleton<ModelConverter>();
-
-            // Controllers
-            services.AddScoped<DominioController>();
-            services.AddScoped<EscolaController>();
-
-            services.AddAuth(configuration);
+            authService = fixture.GetService<AuthService>(testOutputHelper)!;
         }
 
-        protected override ValueTask DisposeAsyncCore() => new();
-
-        protected override IEnumerable<TestAppSettings> GetTestAppSettings()
+        public (string Token, ClaimsPrincipal Usuario) AutenticarUsuario(AppController controller, AuthUserModel<Permissao>? usuario = null, List<Permissao>? permissoes = null)
         {
-            yield return new() { Filename = "appsettings.Test.json", IsOptional = false };
+            if (usuario == null)
+            {
+                usuario = new AuthUserModel<Permissao>
+                {
+                    Id = 1,
+                    Name = "test",
+                    Permissions = Enum.GetValues<Permissao>().ToList(),
+                };
+            }
+            if (permissoes != null)
+            {
+                usuario.Permissions = permissoes;
+            }
+
+            var (token, _) = authService.GenerateToken(usuario);
+
+            var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+
+            Usuario = new ClaimsPrincipal(new ClaimsIdentity(jwt.Claims));
+            controller.AppUsuario = Usuario;
+            return (token, Usuario);
         }
     }
 }

@@ -31,6 +31,15 @@ namespace test.Stubs
                     TotalAlunos = Random.Shared.Next() % 100 + 1,
                     TotalDocentes = Random.Shared.Next() % 100 + 1,
                     Uf = Enum.GetValues<UF>().TakeRandom().FirstOrDefault(),
+                    Superintendencia = new Superintendencia
+                    {
+                        Id = Random.Shared.Next(),
+                        Cep = $"7215436{Random.Shared.Next() % 10}",
+                        Endereco = $"Endereço Teste {Random.Shared.Next()}",
+                        Uf = Enum.GetValues<UF>().TakeRandom().FirstOrDefault(),
+                        Latitude = Random.Shared.NextDouble().ToString().Truncate(12),
+                        Longitude = Random.Shared.NextDouble().ToString().Truncate(12),
+                    }
                 };
                 if (comEtapas)
                 {

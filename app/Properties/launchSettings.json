@@ -10,9 +10,9 @@
   "profiles": {
     "EscolaService": {
       "commandName": "Project",
-      "launchBrowser": true,
+      "launchBrowser": false,
       "launchUrl": "swagger",
-      "applicationUrl": "https://localhost:7083",
+      "applicationUrl": "https://localhost:7084",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

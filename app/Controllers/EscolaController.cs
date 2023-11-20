@@ -72,6 +72,7 @@ namespace app.Controllers
 
             return await escolaService.ListarPaginadaAsync(filtro);
         }
+        
 
         [Authorize]
         [HttpDelete("excluir")]
