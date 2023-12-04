@@ -8,6 +8,7 @@ namespace app.Entidades
     {
         public DbSet<Municipio> Municipios { get; set; }
         public DbSet<Escola> Escolas { get; set; }
+        public DbSet<SolicitacaoAcao> Solicitacoes { get; set; }
         public DbSet<EscolaEtapaEnsino> EscolaEtapaEnsino { get; set; }
         public DbSet<Ranque> Ranques { get; set; }
         public DbSet<EscolaRanque> EscolaRanques { get; set; }

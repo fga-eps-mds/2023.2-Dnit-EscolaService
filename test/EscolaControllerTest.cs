@@ -297,6 +297,18 @@ namespace test
             Assert.True((resultadoObjeto?.Value as string)?.Contains("rede inválida"));
         }
 
+        [Fact]
+        public async Task ExportarRanqueAsync_QuandoExistir_DeveExportar()
+        {
+            dbContext.PopulaEscolas(2);
+
+            var file = await escolaController.ExportarAsync();
+
+            Assert.NotNull(file);
+            Assert.IsType<FileContentResult>(file);
+            Assert.True((file as FileContentResult).FileContents.Length > 0);
+        }
+
         internal new void Dispose()
         {
             dbContext.Clear();

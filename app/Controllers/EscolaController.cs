@@ -106,5 +106,13 @@ namespace app.Controllers
 
             await escolaService.AlterarDadosEscolaAsync(atualizarDadosEscolaDTO);
         }
+
+        [Authorize]
+        [HttpGet("exportar")]
+        public async Task<FileResult> ExportarAsync()
+        {
+            authService.Require(Usuario, Permissao.EscolaExportar);
+            return await escolaService.ExportarEscolasAsync();
+        }
     }
 }

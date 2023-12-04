@@ -1,4 +1,6 @@
-﻿using api;
+﻿using System.Data.SqlTypes;
+using System.Text;
+using api;
 using api.Escolas;
 using api.Ranques;
 using app.Services;
@@ -54,6 +56,31 @@ namespace app.Controllers
         {
             authService.Require(Usuario, Permissao.RanquePollProcessamento);
             return await ranqueService.ObterRanqueEmProcessamento();
+        }
+
+        [HttpGet]
+        [Authorize]
+        public async Task<ListaPaginada<RanqueDetalhesModel>> ListarRanques([FromQuery] PesquisaEscolaFiltro filtro)
+        {
+            authService.Require(Usuario, Permissao.RanqueVisualizar);
+            return await ranqueService.ListarRanquesAsync(filtro);
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task AtualizarRanque(int id, [FromBody] RanqueUpdateData data)
+        {
+            authService.Require(Usuario, Permissao.RanqueVisualizar);
+
+            await ranqueService.AtualizarRanqueAsync(id, data);
+        }
+        [Authorize]
+        [HttpGet("{id}/exportar")]
+        public async Task<FileResult> ExportarRanque(int id)
+        {
+            authService.Require(Usuario, Permissao.RanqueExportar);
+
+            return await ranqueService.ExportarRanqueAsync(id);
         }
     }
 }

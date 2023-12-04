@@ -28,6 +28,7 @@ namespace api.Escolas
         public List<EtapasdeEnsinoModel>? EtapasEnsino { get; set; }
         public double DistanciaSuperintendencia { get; set; }
         public SuperintendenciaModel Superintendencia { get; set; }
+        public bool TemSolicitacao { get; set; } = false;
     }
 
     public class RanqueInfo

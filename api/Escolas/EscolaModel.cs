@@ -1,3 +1,5 @@
+using api.Solicitacoes;
+
 namespace api.Escolas
 {
     public class EscolaModel
@@ -37,5 +39,6 @@ namespace api.Escolas
         public double DistanciaSuperintendencia { get; set; }
         public int? SuperintendenciaId { get; set; }
         public string? UfSuperintendencia { get; set; }
+        public bool TemSolicitacao { get; set; } = false;
     }
 }

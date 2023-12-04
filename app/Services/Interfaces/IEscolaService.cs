@@ -1,6 +1,7 @@
 using api;
 using api.Escolas;
 using app.Entidades;
+using Microsoft.AspNetCore.Mvc;
 
 namespace service.Interfaces
 {
@@ -14,5 +15,6 @@ namespace service.Interfaces
         bool SuperaTamanhoMaximo(MemoryStream planilha);
         Task RemoverSituacaoAsync(Guid id);
         Task AlterarDadosEscolaAsync(AtualizarDadosEscolaData dados);
+        Task<FileResult> ExportarEscolasAsync();
     }
 }

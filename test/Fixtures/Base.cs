@@ -1,5 +1,4 @@
-﻿using api;
-using app.Controllers;
+﻿using app.Controllers;
 using app.Entidades;
 using app.Repositorios;
 using app.Repositorios.Interfaces;
@@ -12,11 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using service.Interfaces;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
-using Xunit.Abstractions;
 using Xunit.Microsoft.DependencyInjection;
 using Xunit.Microsoft.DependencyInjection.Abstracts;
 
@@ -35,6 +30,7 @@ namespace test.Fixtures
             services.AddScoped<IMunicipioRepositorio, MunicipioRepositorio>();
             services.AddScoped<IRanqueRepositorio, RanqueRepositorio>();
             services.AddScoped<ISuperintendenciaRepositorio, SuperIntendenciaRepositorio>();
+            services.AddScoped<ISolicitacaoAcaoRepositorio, SolicitacaoAcaoRepositorio>();
 
             // Services
             services.AddScoped<IEscolaService, EscolaService>();

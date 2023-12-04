@@ -29,5 +29,10 @@ namespace app.Entidades
             get => DataFim?.UtcDateTime;
             set => DataFim = value != null ? new DateTimeOffset(value.Value, TimeSpan.Zero) : null;
         }
+
+        [MaxLength(100)]
+        public string? Descricao { get; set; }
+
+        public List<EscolaRanque> EscolaRanques { get; set; }
     }
 }

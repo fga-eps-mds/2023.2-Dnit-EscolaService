@@ -38,13 +38,14 @@ namespace app.Repositorios
                 .FirstOrDefaultAsync();
         }
 
-        public async Task<ListaPaginada<EscolaRanque>> ListarEscolasAsync(int ranqueId, PesquisaEscolaFiltro filtro)
+        public async Task<ListaPaginada<EscolaRanque>> ListarEscolasPaginadaAsync(int ranqueId, PesquisaEscolaFiltro filtro)
         {
             var query = dbContext.EscolaRanques
                 .Include(er => er.Ranque)
                 .Include(er => er.Escola).ThenInclude(e => e.EtapasEnsino)
                 .Include(er => er.Escola).ThenInclude(e => e.Municipio)
                 .Include(er => er.Escola).ThenInclude(e => e.Superintendencia)
+                .Include(er => er.Escola).ThenInclude(e => e.Solicitacao)
                 .Where(er => er.RanqueId == ranqueId);
 
             if (filtro.Nome != null)
@@ -89,6 +90,35 @@ namespace app.Repositorios
                 .Include(er => er.Escola).ThenInclude(e => e.Superintendencia)
                 .FirstOrDefaultAsync();
             return escola;
+        }
+
+        public async Task<ListaPaginada<Ranque>> ListarRanques( PesquisaEscolaFiltro filtro)
+        {
+            var query = dbContext.Ranques.Include(r => r.EscolaRanques).Where(r => r.DataFimUtc != null).AsQueryable();
+
+            var total = await query.CountAsync();
+            var items = await query
+                .OrderByDescending(er => er.DataFimUtc)
+                .Skip((filtro.Pagina - 1) * filtro.TamanhoPagina)
+                .Take(filtro.TamanhoPagina)
+                .ToListAsync();
+
+            return new ListaPaginada<Ranque>(items, filtro.Pagina, filtro.TamanhoPagina, total);
+        }
+        public async Task<List<EscolaRanque>> ListarEscolaRanquesAsync(int ranqueId)
+        {
+            var query = dbContext.EscolaRanques
+                .Include(er => er.Ranque)
+                .Include(er => er.Escola).ThenInclude(e => e.EtapasEnsino)
+                .Include(er => er.Escola).ThenInclude(e => e.Municipio)
+                .Include(er => er.Escola).ThenInclude(e => e.Superintendencia)
+                .Where(er => er.RanqueId == ranqueId);
+
+            var items = await query
+                .OrderBy(er => er.Posicao)
+                .ToListAsync();
+
+            return items;
         }
     }
 }

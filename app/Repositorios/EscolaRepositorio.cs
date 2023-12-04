@@ -22,7 +22,9 @@ namespace app.Repositorios
 
         private IQueryable<Escola> SelecaoEscola(bool incluirEtapas = false, bool incluirMunicipio = false)
         {
-            var query = dbContext.Escolas.AsQueryable();
+            var query = dbContext.Escolas
+                .Include(e => e.Solicitacao)
+                .AsQueryable();
 
             if (incluirEtapas)
             {
@@ -118,11 +120,21 @@ namespace app.Repositorios
             return entidade;
         }
 
-        public async Task<ListaPaginada<Escola>> ListarPaginadaAsync(PesquisaEscolaFiltro filtro)
+        public async Task<List<Escola>> ListarAsync()
+        {
+            return await dbContext.Escolas
+                .Include(e => e.EtapasEnsino)
+                .Include(e => e.Municipio)
+                .Include(e => e.Superintendencia)
+                .ToListAsync();
+        }
+
+            public async Task<ListaPaginada<Escola>> ListarPaginadaAsync(PesquisaEscolaFiltro filtro)
         {
             var query = dbContext.Escolas
                 .Include(e => e.EtapasEnsino)
                 .Include(e => e.Municipio)
+                .Include(e => e.Solicitacao)
                 .Include(e => e.Superintendencia)
                 .AsQueryable();
 

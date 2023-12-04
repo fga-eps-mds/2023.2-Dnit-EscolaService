@@ -1,5 +1,6 @@
 ﻿
 using app.Entidades;
+using Microsoft.EntityFrameworkCore.Storage;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,16 +13,34 @@ namespace test.Stubs
         private static List<Municipio>? municipios;
         private static Mutex municipios_mutex = new Mutex();
 
-        public static List<Escola> PopulaEscolas(this AppDbContext dbContext, int limite = 1, bool comEtapas = true)
+        public static List<SolicitacaoAcao> PopulaSolicitacoes(this AppDbContext dbContext, int limite = 1)
         {
-            dbContext.Clear();
-            var escolas = new List<Escola>();
-            
+            var sols = new List<SolicitacaoAcao>();
             if (!dbContext.Municipios.Any())
             {
                 dbContext.PopulaMunicipios(limite);
             }
-            
+            var municipios = dbContext.Municipios.Take(1).ToList();
+
+            foreach (var sol in SolicitacaoAcaoStub.ListarSolicitacoes(municipios).Take(limite))
+            {
+                dbContext.Solicitacoes.Add(sol);
+                sols.Add(sol);
+            }
+            dbContext.SaveChanges();
+            return sols;
+        }
+
+        public static List<Escola> PopulaEscolas(this AppDbContext dbContext, int limite = 1, bool comEtapas = true)
+        {
+            dbContext.Clear();
+            var escolas = new List<Escola>();
+
+            if (!dbContext.Municipios.Any())
+            {
+                dbContext.PopulaMunicipios(limite);
+            }
+
             var municipios = dbContext.Municipios.Take(1).ToList();
 
             foreach (var escola in EscolaStub.ListarEscolas(municipios, comEtapas).Take(limite))
@@ -62,6 +81,7 @@ namespace test.Stubs
         public static void Clear(this AppDbContext dbContext)
         {
             dbContext.RemoveRange(dbContext.Escolas);
+            dbContext.RemoveRange(dbContext.Solicitacoes);
             dbContext.RemoveRange(dbContext.EscolaEtapaEnsino);
             dbContext.RemoveRange(dbContext.Municipios);
             dbContext.RemoveRange(dbContext.EscolaRanques);

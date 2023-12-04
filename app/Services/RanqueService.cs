@@ -1,5 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-
 using api.Escolas;
 using app.Entidades;
 using app.Repositorios.Interfaces;
@@ -8,6 +7,8 @@ using Hangfire;
 using api;
 using api.Ranques;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace app.Services
 {
@@ -72,7 +73,7 @@ namespace app.Services
             if (ultimoRanque == null)
                 return new ListaPaginada<RanqueEscolaModel>(new(), filtro.Pagina, filtro.TamanhoPagina, 0);
 
-            var resultado = await ranqueRepositorio.ListarEscolasAsync(ultimoRanque.Id, filtro);
+            var resultado = await ranqueRepositorio.ListarEscolasPaginadaAsync(ultimoRanque.Id, filtro);
 
             var items = resultado.Items.Select((er, index) => mc
                 .ToModel(er))
@@ -138,6 +139,47 @@ namespace app.Services
             {
                 escolaRanque.Posicao = i + 1;
             }
+        }
+
+        public async Task<ListaPaginada<RanqueDetalhesModel>> ListarRanquesAsync(PesquisaEscolaFiltro filtro)
+        {
+            var ranques = await ranqueRepositorio.ListarRanques(filtro);
+            // FIXME(US5): Dados mockados. Tem que buscar do banco de dados no futuro.
+            FatorModel[] fatores = {
+                new() { Nome = "UPS", Peso = 1, Valor = 0 },
+            };
+            var items = ranques.Items.Select((er, index) => mc
+                .ToModel(er, fatores))
+                .ToList();
+            return new ListaPaginada<RanqueDetalhesModel>(items, ranques.Pagina, ranques.ItemsPorPagina, ranques.Total);
+        }
+
+        public async Task AtualizarRanqueAsync(int id, RanqueUpdateData data)
+        {
+            var ranque = await ranqueRepositorio.ObterPorIdAsync(id);
+            ranque!.Descricao = data.Descricao;
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<FileResult> ExportarRanqueAsync(int id)
+        {
+            var escolas = await ranqueRepositorio.ListarEscolaRanquesAsync(id);
+            var ranque = escolas.First().Ranque;
+            var builder = new StringBuilder("");
+            var escolaHeaders = string.Join(";", Escola.SerializeHeaders());
+            builder.AppendLine($"RanqueId;RanqueDescrição;NumEscolas;UPSPeso;UPSValor;Posição;Pontuação;{escolaHeaders}");
+            var numEscola = escolas.Count();
+
+            foreach(var escola in escolas) {
+                var escolaCsv = CsvSerializer.Serialize(escola.Escola, ";");
+                builder.AppendLine($"{ranque.Id};{ranque.Descricao};{numEscola};{1};{escola.Pontuacao};{escola.Posicao};{escola.Pontuacao};{escolaCsv}");
+            }
+
+            var bytes = Encoding.UTF8.GetBytes(builder.ToString());
+            return new FileContentResult(bytes, "text/csv"){
+                FileDownloadName = $"ranque_{id}.csv",
+            };
         }
     }
 

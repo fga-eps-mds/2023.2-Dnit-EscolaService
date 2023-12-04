@@ -10,27 +10,43 @@ using System.Threading.Tasks;
 using System.Threading;
 using test.Stubs;
 using app.Services;
+using app.Repositorios.Interfaces;
+using app.Entidades;
+using Xunit.Microsoft.DependencyInjection.Abstracts;
+using test.Fixtures;
+using Xunit.Abstractions;
 
 namespace test
 {
-    public class SolicitacaoAcaoServiceTest
+    public class SolicitacaoAcaoServiceTest : TestBed<Base>
     {
-        public SolicitacaoAcaoServiceTest()
+        private readonly Mock<ISmtpClientWrapper> smtpClientWrapperMock;
+        private readonly Mock<IHttpClientFactory> httpClientFactoryMock;
+        private readonly Mock<IConfiguration> configurationMock;
+        private readonly Mock<ISolicitacaoAcaoRepositorio> solicitacaoAcaoRepositorioMock;
+        private readonly Mock<IEscolaRepositorio> escolaRepositorioMock;
+        private readonly AppDbContext db;
+        private SolicitacaoAcaoService service;
+
+        public SolicitacaoAcaoServiceTest(ITestOutputHelper testOutputHelper, Base fixture) : base(testOutputHelper, fixture)
         {
             Environment.SetEnvironmentVariable("EMAIL_SERVICE_ADDRESS", "teste_email@exemplo.com");
             Environment.SetEnvironmentVariable("EMAIL_SERVICE_PASSWORD", "teste");
             Environment.SetEnvironmentVariable("EMAIL_DNIT", "teste_email@exemplo.com");
+
+            db = fixture.GetService<AppDbContext>(testOutputHelper)!;
+            smtpClientWrapperMock = new();
+            httpClientFactoryMock = new();
+            configurationMock = new();
+            solicitacaoAcaoRepositorioMock = new();
+            escolaRepositorioMock = new();
+
+            service = new SolicitacaoAcaoService(db, smtpClientWrapperMock.Object, httpClientFactoryMock.Object, configurationMock.Object, solicitacaoAcaoRepositorioMock.Object, escolaRepositorioMock.Object);
         }
 
         [Fact]
         public void EnviarSolicitacaoAcao_QuandoSolicitacaoForPassada_DeveEnviarMensagemEsperada()
         {
-            Mock<ISmtpClientWrapper> smtpClientWrapperMock = new();
-            Mock<IHttpClientFactory> httpClientFactoryMock = new();
-            Mock<IConfiguration> configurationMock = new();
-
-            ISolicitacaoAcaoService service = new SolicitacaoAcaoService(smtpClientWrapperMock.Object, httpClientFactoryMock.Object, configurationMock.Object);
-
             var solicitacaoAcaoStub = new SolicitacaoAcaoStub();
             var solicitacaoAcaoDTO = solicitacaoAcaoStub.ObterSolicitacaoAcaoDTO();
 
@@ -57,12 +73,6 @@ namespace test
         [Fact]
         public void EnviarEmail_QuandoDestinatarioForPassado_DeveEnviarEmail()
         {
-            Mock<ISmtpClientWrapper> smtpClientWrapperMock = new();
-            Mock<IHttpClientFactory> httpClientFactoryMock = new();
-            Mock<IConfiguration> configurationMock = new();
-
-            ISolicitacaoAcaoService service = new SolicitacaoAcaoService(smtpClientWrapperMock.Object, httpClientFactoryMock.Object, configurationMock.Object);
-
             var emailDestinatario = "dnit@email.com";
             var assunto = "Solicitação de ação";
             var corpo = "Nova solicitação de ação";
@@ -80,12 +90,6 @@ namespace test
         [Fact]
         public void EnviarEmail_QuandoDestinatarioForVazio_DeveLancarExcecao()
         {
-            Mock<ISmtpClientWrapper> smtpClientWrapperMock = new();
-            Mock<IHttpClientFactory> httpClientFactoryMock = new();
-            Mock<IConfiguration> configurationMock = new();
-
-            ISolicitacaoAcaoService service = new SolicitacaoAcaoService(smtpClientWrapperMock.Object, httpClientFactoryMock.Object, configurationMock.Object);
-
             var emailDestinatario = "";
             var assunto = "Solicitação de ação";
             var corpo = "Nova solicitação de ação";
@@ -99,7 +103,7 @@ namespace test
             Mock<ISmtpClientWrapper> smtpClientWrapperMock = new();
             Mock<IConfiguration> configurationMock = new();
 
-            configurationMock.Setup(x => x["ApiInepUrl"]).Returns("teste");
+            configurationMock.Setup(x => x["ApiInepUrl"]).Returns("http://inep.com");
 
             var resposta = @"[2,[{
                 ""cod"": 12345678,
@@ -135,14 +139,13 @@ namespace test
                 })
                 .Verifiable();
 
-            ISolicitacaoAcaoService service = new SolicitacaoAcaoService(smtpClientWrapperMock.Object, httpClientFactoryMock.Object, configurationMock.Object);
-
             int municipio = 100;
             int codEscolaA = 12345678;
             int codEscolaB = 87654321;
             int primeiraPosicao = 0;
             int segundaPosicao = 1;
 
+            service = new SolicitacaoAcaoService(db, smtpClientWrapperMock.Object, httpClientFactoryMock.Object, configurationMock.Object, solicitacaoAcaoRepositorioMock.Object, escolaRepositorioMock.Object);
             var escolas = await service.ObterEscolas(municipio);
 
             Assert.Equal(codEscolaA, escolas.ElementAt(primeiraPosicao).Cod);

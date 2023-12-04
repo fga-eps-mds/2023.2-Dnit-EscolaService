@@ -1,4 +1,5 @@
 using api;
+using api.Escolas;
 using app.Entidades;
 using app.Repositorios.Interfaces;
 using EnumsNET;
@@ -18,9 +19,10 @@ namespace test
 {
     public class EscolaServiceTest : TestBed<Base>
     {
-        IEscolaService escolaService;
-        IEscolaRepositorio escolaRepositorio;
-        AppDbContext dbContext;
+        private readonly IEscolaService escolaService;
+        private readonly IEscolaRepositorio escolaRepositorio;
+        private readonly ISolicitacaoAcaoRepositorio solicitacaoAcaoRepositorio;
+        private readonly AppDbContext dbContext;
 
         public EscolaServiceTest(ITestOutputHelper testOutputHelper, Base fixture) : base(testOutputHelper, fixture)
         {
@@ -29,6 +31,7 @@ namespace test
 
             escolaService = fixture.GetService<IEscolaService>(testOutputHelper)!;
             escolaRepositorio = fixture.GetService<IEscolaRepositorio>(testOutputHelper)!;
+            solicitacaoAcaoRepositorio = fixture.GetService<ISolicitacaoAcaoRepositorio>(testOutputHelper)!;
         }
 
         [Fact]
@@ -202,6 +205,35 @@ namespace test
             Assert.Equal(etapas.Count, escola.EtapasEnsino?.Count);
             Assert.True(etapas.All(e => escola.EtapasEnsino?.Exists(ee => ee.EtapaEnsino == e) ?? false));
         }
+
+        [Fact]
+        public async Task CadastrarAsync_QuandoEscolaASerCriadaPossuiSolicitacao_EscolaEhRelacionadaASolicitacao()
+        {
+            var escola = EscolaStub.ListarEscolasDto(dbContext.Municipios.ToList(), false).First();
+            escola.CodigoEscola = 1234;
+            var solInfo = new SolicitacaoAcao()
+            {
+                EscolaCodigoInep = 1234,
+                Email = "teste@gmail.com",
+                Observacoes = "...",
+                Telefone = "190",
+                Vinculo = "190",
+                NomeSolicitante = "Fulano",
+                EscolaNome = "Escola Educação",
+            };
+            var sol = dbContext.Solicitacoes.Add(solInfo).Entity;
+            dbContext.SaveChanges();
+
+            await escolaService.CadastrarAsync(escola);
+            var escolaCriada = dbContext.Escolas
+                .Include(e => e.Solicitacao)
+                .Where(e => e.Codigo == 1234)
+                .First();
+
+            Assert.Equal(sol.Id, escolaCriada.Solicitacao!.Id);
+            Assert.Equal(6, dbContext.Escolas.Count());
+        }
+
 
         public new void Dispose()
         {

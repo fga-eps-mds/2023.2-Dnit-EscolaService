@@ -3,6 +3,11 @@ using System.Net.Mail;
 using Newtonsoft.Json.Linq;
 using System.Web;
 using api.Escolas;
+using app.Repositorios.Interfaces;
+using app.Entidades;
+using api;
+using api.Solicitacoes;
+using EnumsNET;
 
 namespace app.Services
 {
@@ -11,12 +16,18 @@ namespace app.Services
         private readonly ISmtpClientWrapper _smtpClientWrapper;
         private readonly IHttpClientFactory httpClientFactory;
         private readonly IConfiguration configuration;
+        private readonly ISolicitacaoAcaoRepositorio solicitacaoAcaoRepositorio;
+        private readonly IEscolaRepositorio escolaRepositorio;
+        private readonly AppDbContext dbContext;
 
-        public SolicitacaoAcaoService(ISmtpClientWrapper smtpClientWrapper, IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        public SolicitacaoAcaoService(AppDbContext dbContext, ISmtpClientWrapper smtpClientWrapper, IHttpClientFactory httpClientFactory, IConfiguration configuration, ISolicitacaoAcaoRepositorio solicitacaoAcaoRepositorio, IEscolaRepositorio escolaRepositorio)
         {
+            this.dbContext = dbContext;
             _smtpClientWrapper = smtpClientWrapper;
             this.httpClientFactory = httpClientFactory;
             this.configuration = configuration;
+            this.solicitacaoAcaoRepositorio = solicitacaoAcaoRepositorio;
+            this.escolaRepositorio = escolaRepositorio;
         }
 
         public void EnviarSolicitacaoAcao(SolicitacaoAcaoData solicitacaoAcaoDTO)
@@ -25,7 +36,7 @@ namespace app.Services
 
             string mensagem = $"Nova solicitação de ação em escola.\n\n" +
                             $"Escola: {solicitacaoAcaoDTO.Escola}\n" +
-                            $"UF: {solicitacaoAcaoDTO.UF}\n" +
+                            $"UF: {solicitacaoAcaoDTO.Uf.AsString()}\n" +
                             $"Municipio: {solicitacaoAcaoDTO.Municipio}\n" +
                             $"Nome do Solicitante: {solicitacaoAcaoDTO.NomeSolicitante}\n" +
                             $"Vínculo com a escola: {solicitacaoAcaoDTO.VinculoEscola}\n" +
@@ -37,6 +48,7 @@ namespace app.Services
             var emailDestinatario = Environment.GetEnvironmentVariable("EMAIL_DNIT") ?? "";
             EnviarEmail(emailDestinatario, "Solicitação de Serviço", mensagem);
         }
+
         public void EnviarEmail(string emailDestinatario, string assunto, string corpo)
         {
 
@@ -50,6 +62,27 @@ namespace app.Services
             mensagem.Body = corpo;
 
             _smtpClientWrapper.Send(mensagem);
+        }
+
+        public async Task CriarOuAtualizar(SolicitacaoAcaoData solicitacao)
+        {
+            var solicitacaoExistente = await solicitacaoAcaoRepositorio.ObterPorCodigoInepdAsync(solicitacao.EscolaCodigoInep);
+
+            var escolaCadastrada = await escolaRepositorio.ObterPorCodigoAsync(solicitacao.EscolaCodigoInep);
+            var sol = await solicitacaoAcaoRepositorio.CriarOuAtualizar(solicitacao, escolaCadastrada, solicitacaoExistente);
+            if (escolaCadastrada != null) {
+                escolaCadastrada.Solicitacao = sol;
+            }
+
+            await dbContext.SaveChangesAsync();
+        }
+
+        public async Task<ListaPaginada<SolicitacaoAcaoModel>> ObterSolicitacoesAsync(PesquisaSolicitacaoFiltro filtro)
+        {
+            var lista = await solicitacaoAcaoRepositorio.ObterSolicitacoesAsync(filtro);
+            var modelConverter = new ModelConverter();
+            var modelos = lista.Items.ConvertAll(modelConverter.ToModel);
+            return new ListaPaginada<SolicitacaoAcaoModel>(modelos, filtro.Pagina, filtro.TamanhoPagina, lista.Total);
         }
 
         public async Task<IEnumerable<EscolaInep>> ObterEscolas(int municipio)
