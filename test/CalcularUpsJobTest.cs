@@ -12,6 +12,7 @@ using Xunit.Microsoft.DependencyInjection.Abstracts;
 using test.Stubs;
 using System.Linq;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 
 namespace test
@@ -51,7 +52,7 @@ namespace test
         }
 
         [Fact]
-        public async void ExecutarAsync_QuandoTudoCerto_DefineUpsDeAcordoComARespostaDoMicroservicoUps()
+        public async Task ExecutarAsync_QuandoTudoCerto_DefineUpsDeAcordoComARespostaDoMicroservicoUps()
         {
             var escolas = db.PopulaEscolas(3);
             upsServiceMock
@@ -67,7 +68,7 @@ namespace test
         }
 
         [Fact]
-        public async void ExecutarAsync_QuandoTudoCerto_CriaEscolaRanques()
+        public async Task ExecutarAsync_QuandoTudoCerto_CriaEscolaRanques()
         {
             db.PopulaEscolas(6);
             upsServiceMock
@@ -82,7 +83,7 @@ namespace test
         }
 
         [Fact]
-        public async void FinalizarCalcularUpsJob_QuandoCalculoEmProgresso_DecrementaBateladasEmProgresso()
+        public async Task FinalizarCalcularUpsJob_QuandoCalculoEmProgresso_DecrementaBateladasEmProgresso()
         {
             var ranqueId = 1;
             db.Ranques.Add(new Ranque() { Id = ranqueId, BateladasEmProgresso = 10 });
@@ -96,7 +97,7 @@ namespace test
         }
 
         [Fact]
-        public async void FinalizarCalcularUpsJob_QuandoUltimabatelada_InvocaConcluirRanqueamentoAsync()
+        public async Task FinalizarCalcularUpsJob_QuandoUltimabatelada_InvocaConcluirRanqueamentoAsync()
         {
             var ranqueId = 1;
             db.Ranques.Add(new Ranque() { Id = ranqueId, BateladasEmProgresso = 1 });

@@ -1,6 +1,4 @@
-﻿
-using app.Entidades;
-using Microsoft.EntityFrameworkCore.Storage;
+﻿using app.Entidades;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -70,12 +68,58 @@ namespace test.Stubs
             return municipiosDb;
         }
 
-        public static List<Superintendencia> PopulaSuperintendencias(this AppDbContext dbContext, int limit, int idStart = 1)
+        public static List<Polo> PopulaPolos(this AppDbContext dbContext, int limit, int idStart = 1)
         {
-            var superintendencias = SuperintendenciaStub.Listar(idStart).Take(limit).ToList();
-            dbContext.AddRange(superintendencias);
+            if (!dbContext.Municipios.Any())
+            {
+                dbContext.PopulaMunicipios(limit);
+            }
+
+            var listaMunicipios = dbContext.Municipios.Take(1).ToList();
+            var polos = PoloStub.Listar(listaMunicipios, idStart).Take(limit).ToList();
+            dbContext.AddRange(polos);
             dbContext.SaveChanges();
-            return superintendencias;
+            return polos;
+        }
+
+        public static List<CustoLogistico> PopulaCustosLogisticos(this AppDbContext dbContext, int limit)
+        {
+            dbContext.Clear();
+            var custoLogisticos = CustoLogisticoStub.ObterCustoLogisticosValidos();
+            dbContext.AddRange(custoLogisticos);
+            dbContext.SaveChanges();
+            return custoLogisticos;
+        }
+
+        public static List<FatorPriorizacao> PopulaPriorizacao(this AppDbContext dbContext, int limit)
+        {
+            var Priorizacoes = PriorizacaoStub.ObterListaPriorizacoes();
+            dbContext.AddRange(Priorizacoes);
+            dbContext.SaveChanges();
+            return Priorizacoes;
+        }
+
+        public static FatorCondicao PopulaCondicao(this AppDbContext dbContext, int limit)
+        {
+            var condicoes = PriorizacaoStub.ObterCondicao();
+            dbContext.AddRange(condicoes); 
+            dbContext.SaveChanges();
+            return condicoes;
+        }
+        public static List<PlanejamentoMacro> PopulaPlanejamentoMacro(this AppDbContext dbContext, int limit)
+        {
+            dbContext.Clear();
+            if (!dbContext.Municipios.Any())
+            {
+                dbContext.PopulaMunicipios(limit);
+            }
+            List<PlanejamentoMacro> planejamentosMacros = new List<PlanejamentoMacro>();
+            foreach (var pm in PlanejamentoMacroStub.ListarPlanejamentoMacro(dbContext.Municipios.Take(1).ToList()).Take(limit))
+            {
+                dbContext.Add(pm);
+                planejamentosMacros.Add(pm);
+            }
+            return planejamentosMacros;
         }
 
         public static void Clear(this AppDbContext dbContext)
@@ -86,7 +130,8 @@ namespace test.Stubs
             dbContext.RemoveRange(dbContext.Municipios);
             dbContext.RemoveRange(dbContext.EscolaRanques);
             dbContext.RemoveRange(dbContext.Ranques);
-            dbContext.RemoveRange(dbContext.Superintendencias);
+            dbContext.RemoveRange(dbContext.CustosLogisticos);
+            dbContext.RemoveRange(dbContext.Polos);
             dbContext.SaveChanges();
         }
     }

@@ -69,7 +69,7 @@ namespace test
         public async Task CalcularNovoRanqueAsync_QuandoNumeroDePaginas10_EnqueueDeveSerChamado10vezes()
         {
             db.PopulaEscolas(33);
-            var chamadasEsperadas = (int)Math.Ceiling(33.0 / jobConfig.TamanhoBatelada);
+            var chamadasEsperadas = 1;
 
             await service.CalcularNovoRanqueAsync();
 

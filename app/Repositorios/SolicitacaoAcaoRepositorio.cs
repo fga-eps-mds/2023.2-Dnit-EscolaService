@@ -77,7 +77,7 @@ namespace app.Repositorios
 
             var total = await query.CountAsync();
             var sols = await query
-                .OrderBy(s => s.Escola!.DistanciaSuperintendencia)
+                .OrderBy(s => s.Escola!.DistanciaPolo)
                 .Skip((filtro.Pagina - 1) * filtro.TamanhoPagina)
                 .Take(filtro.TamanhoPagina)
                 .ToListAsync();

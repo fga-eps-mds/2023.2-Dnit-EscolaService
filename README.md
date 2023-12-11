@@ -1,141 +1,95 @@
-# 2023.1-Dnit-EscolaService
+# EscolaService
 
-Serviço responsavel pelas funcionalidades relacionados as escolas (cadastro, busca, atualização e exclusão de escolas,e solicitações para ação do DNIT).
+Serviço responsável pelas funcionalidades relacionadas ao cáculo de ranque, 
+configuração de prioridades, gerência de escola, polos e etc.
 
-### Como instalar
+## Pré requisitos
 
-A forma de instalação é igual para todos os serviços, havendo diferenças apenas com base no sistema operacional.
+- [.NET 6](https://dotnet.microsoft.com/en-us/download/dotnet/6.0)
+- Docker e [Docker Compose](https://docs.docker.com/compose/install/)
 
-### Como instalar
+Se você tem o Compose instalado como standalone, use:
 
-A forma de instalação é igual para todos os serviços, havendo diferenças apenas com base no sistema operacional.
-
-_Observação_: No EscolaServices, é necessario adicionar um arquivo ".env" dentro da pasta "app", com as seguintes informações:
-
-    - EMAIL_SERVICE_ADDRESS : email usado para enviar a mensagem.
-    - EMAIL_SERVICE_PASSWORD: senha do email acima.
-    - EMAIL_SERVICE_SMTP: endereco do servidor smtp
-    - EMAIL_DNIT: email que receberá a mensagem.
-
-#### Windows e MacOs
-
-##### Modo 1
-
-- Abra um navegador da web e acesse o site oficial da Microsoft .NET: https://dotnet.microsoft.com/download/dotnet/6.0
-- Role a página até a seção ".NET 6 SDK" e clique no botão de download adequado para seu sistema operacional (por exemplo, "macOS x64 Installer" para macOS 64 bits ou  "Windows x64 Installer" para Windows 64 bits).
-- O arquivo de instalação será baixado. Depois que o download for concluído, clique duas vezes no arquivo para iniciá-lo.
-- O instalador será aberto. Leia e aceite os termos de licença.
-- Selecione as opções de instalação que você deseja.
-- Clique no botão "Install" (Instalar) para iniciar a instalação do .NET 6.
-- Após a conclusão da instalação, você verá uma tela informando que o .NET 6 SDK foi instalado com sucesso.
-- Para verificar se a instalação foi bem-sucedida, abra o Prompt de Comando ou o PowerShell e execute o seguinte comando:
-
-```bash
-dotnet --version
-```
-- Isso exibirá a versão do .NET instalada, confirmando se o .NET 6 está configurado corretamente.
-
-##### Modo 2
-
-Basta instalar a IDE [Visual Studio](https://visualstudio.microsoft.com/pt-br/free-developer-offers/) escolhendo a versão gratuita (Versão Community). Após instalar o Visual Studio, ele automaticamente irá instalar o .NET com a versão mais estável.
-
-#### Linux
-
-Instale o SDK do *.*NET .
-
-```bash
-sudo apt-get update && \
-  sudo apt-get install -y dotnet-sdk-6.0
+```sh
+docker-compose ...
 ```
 
-Instale o runtime ASP.NET Core.
+Entretando, prefira instalar o Docker Compose como plugin (recomedação do 
+Docker). Os comandos nesse formato são assim:
 
-```bash
-sudo apt-get update && \
-  sudo apt-get install -y aspnetcore-runtime-6.0
+```sh
+docker compose ...
 ```
 
-Entre na pasta do serviço. Dentro da pasta "app" rode o comando:
+Se você precisa de `sudo` para executar comandos do Docker, consulte o 
+[guia](https://docs.docker.com/engine/install/linux-postinstall/) de pós-instalação.
 
-```bash
-dotnet run
-```
-### Clonar Aplicação
+## Executar
 
-Para clonar o repostório, basta utilizar o comando abaixo:
-
-##### EscolaService
-```
-git clone https://github.com/fga-eps-mds/2023.1-Dnit-EscolaService.git
-```
-
-### Como Rodar
-
-### Utilizando docker-compose
-
-#### Pré-requisitos
-- Docker
-- Docker-compose
-
-#### Windows 
-Rode o seguinte comando na pasta da aplicação.
-```bash
-docker-compose build && docker-compose up
+```sh
+git clone https://github.com/fga-eps-mds/2023.2-Dnit-EscolaService.git
+cd 2023.2-Dnit-EscolaService
 ```
 
 
-#### Linux ou MacOS
-Rode o seguinte comando na pasta da aplicação.
-```bash
-sudo docker-compose build && sudo docker-compose up
+**Observação**: é necessário adicionar um arquivo `.env` dentro da pasta `app/`, 
+com as seguintes informações:
+
+    EMAIL_SERVICE_ADDRESS="email usado para enviar a mensagem"
+    EMAIL_SERVICE_PASSWORD="senha do email acima"
+    EMAIL_SERVICE_SMTP="endereco do servidor smtp"
+    EMAIL_DNIT="email que receberá a mensagem"
+
+
+**NOTA**: lembre-se de criar a rede pelo UsuarioService: [banco-de-dados.md](https://github.com/fga-eps-mds/2023.2-Dnit-UsuarioService/blob/main/docs/banco-de-dados.md).
+
+Inicie todos os containeres:
+
+```sh
+docker compose up -d
 ```
 
+Ou iniciar apenas o container de banco de dados, entrar no diretório `app/` 
+e iniciar o servidor nativamente:
 
-#### Usando Visual Studio
-
-Para rodar uma aplicação usando Visual Studio, basta clicar no arquivo com extenção 'sln' e em seguida clicar no ícone para rodar aplicação conforme mostra abaixo:
-<br>
-![rodar](https://github.com/fga-eps-mds/2023-1-CAPJu-Services/assets/54676096/e601faf8-1a9b-438a-a8fb-d9bb1078be3b)
-
-
-#### Usando Visual Studio Code
-
-Para rodar utilizando o VS Code, basta seguir a seguinte instrução:
-
-Entre na pasta do serviço. Dentro da pasta "app" rode o comando:
-
-```bash
-dotnet run
+```sh
+docker compose up -d dnit-escola-db
+cd app
+dotnet watch
 ```
 
-### Encerrando a aplicação
+Acesse a documentação da API pelo swagger em http://localhost:7084/swagger.
 
-No terminal em que a aplicação esta rodando, digite simultaneamente as teclas **ctrl**+**c**. Caso esteja utilizando o Visual Studio, clique no ícone quadrado vermelho <br>
+### Banco de dados e rede docker
 
+Para mais informações sobre como acessar o banco de dados, leia o guia 
+[banco-de-dados.md](https://github.com/fga-eps-mds/2023.2-Dnit-UsuarioService/blob/main/docs/banco-de-dados.md)
+no repositório `UsuarioService`.
 
-![parar](https://github.com/fga-eps-mds/2023.1-Dnit-EscolaService/assets/54676096/45aedf91-bfb3-4475-afeb-6111a6feabe8)
+### Editor
 
-### Documentação endpoints
+Para mais informações sobre instalação e IDE, leia o guia.
+[ambiente.md](https://github.com/fga-eps-mds/2023.2-Dnit-UsuarioService/blob/main/docs/ambiente.md)
+no repositório `UsuarioService`.
 
-Para documentar os endpoints estamos utilizando o Swagger. Caso queira visualizar, basta abrir a rota: 
-```bash
-http://localhost:7084/swagger/index.html
-```
+## Licença
 
-<img src="https://github.com/fga-eps-mds/2023-1-CAPJu-Services/assets/54676096/e3756afe-546f-4501-af41-595e3a596c6a" alt="swagger-usuarioservice" style="width:800px;">
-
-
-### Licença
-
-O projeto DnitEscolaService está sob as regras aplicadas na licença [AGPL-3.0](https://github.com/fga-eps-mds/2023.1-Dnit-EscolaService/blob/main/LICENSE
-)
-
+O projeto EscolaService está sob as regras aplicadas na licença 
+[AGPL-3.0](https://github.com/fga-eps-mds/2023.2-Dnit-EscolaService/blob/main/LICENSE).
 
 ## Contribuidores
 
-<a href="https://github.com/fga-eps-mds/2023.1-Dnit-EscolaService/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=fga-eps-mds/2023.1-Dnit-EscolaService" />
-</a>
-
-
-
+- [Daniel Porto](https://github.com/DanielPortods)
+- [Rafael Berto](https://github.com/RafaelBP02)
+- [Thiago Sampaio](https://github.com/thiagohdaqw)
+- [Victor Hugo](https://github.com/victorhugo21)
+- [Vitor Lamego](https://github.com/VitorLamego)
+- [Wagner Martins](https://github.com/wagnermc506)
+- [Yudi Yamane](https://github.com/yudi)
+- [André Emanuel](https://github.com/Hunter104)
+- [Artur Henrique](https://github.com/H0lzz)
+- [Cássio Sousa](https://github.com/csreis72)
+- [Eduardo Matheus](https://github.com/DiceRunner714)
+- [João Antonio](https://github.com/joaoseisei)
+- [Lucas Gama](https://github.com/bottinolucas)
+- [Márcio Henrique](https://github.com/DeM4rcio)

@@ -125,12 +125,55 @@ namespace api
         EscolaNaoEncontrada,
         [Description("Municipio não encontrado")]
         MunicipioNaoEncontrado,
-        [Description("Superintendência não encontrada")]
-        SuperIntendenciaNaoEncontrada,
+        [Description("Polo não encontrado")]
+        PoloNaoEncontrado,
         [Description("Já tem um ranque sendo calculado, tente novamente mais tarde")]
         RanqueJaSendoCalculado,
         [Description("Formato JSON não reconhecido")]
         FormatoJsonNaoReconhecido,
+        [Description("Fator de Priorização não encontrado")]
+        FatorNaoEncontrado,
+        [Description("Planejamento Macro não encontrado")]
+        PlanejamentoMacroNaoEncontrado,
+    }
+
+    public enum Mes
+    {
+        [Description("Janeiro")]
+        Janeiro = 1,
+
+        [Description("Fevereiro")]
+        Fevereiro,
+
+        [Description("Março")]
+        Marco,
+
+        [Description("Abril")]
+        Abril,
+
+        [Description("Maio")]
+        Maio,
+
+        [Description("Junho")]
+        Junho,
+
+        [Description("Julho")]
+        Julho,
+
+        [Description("Agosto")]
+        Agosto,
+
+        [Description("Setembro")]
+        Setembro,
+
+        [Description("Outubro")]
+        Outubro,
+
+        [Description("Novembro")]
+        Novembro,
+
+        [Description("Dezembro")]
+        Dezembro
     }
 
     public enum Permissao
@@ -150,12 +193,49 @@ namespace api
         RanqueVisualizar = 5002,
         [Description("Calcular Ranking de Escolas")]
         RanqueCalcular = 5003,
-        [Description("Calcular Ranking de Escolas")]
+        [Description("Poll ranking em processamento")]
         RanquePollProcessamento = 5004,
         [Description("Exportar Ranking de Escolas")]
         RanqueExportar = 5005,
 
         [Description("Visualizar solicitação")]
         SolicitacaoVisualizar = 9000,
+        
+        [Description("Cadastrar Polo")]
+        PoloCadastrar = 10000,
+        [Description("Editar Polo")]
+        PoloEditar = 10001,
+        [Description("Remover Polo")]
+        PoloRemover = 10002,
+        [Description("Visualizar Polo")]
+        PoloVisualizar = 10003,
+
+        [Description("Visualizar Planejamento Macro")]
+        PlanejamentoVisualizar = 11000,
+        [Description("Criar Planejamento Macro")]
+        PlanejamentoCriar = 11001,
+        [Description("Editar Planejamento Macro")]
+        PlanejamentoEditar = 11002,
+        [Description("Remover Planejamento Macro")]
+        PlanejamentoRemover = 11003,
+    }
+
+    public enum PropriedadeCondicao
+    {
+        Porte = 1,
+        Situacao,
+        Municipio,
+        UF,
+        Localizacao,
+        TotalAlunos,
+        EtapaEnsino,
+        Rede
+    }
+
+    public enum OperacaoCondicao
+    {
+        Equals = 1,
+        GTE,
+        LTE
     }
 }

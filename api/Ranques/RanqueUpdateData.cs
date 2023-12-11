@@ -1,5 +1,4 @@
 using api.Municipios;
-using api.Superintendencias;
 
 namespace api.Ranques
 {

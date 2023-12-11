@@ -10,7 +10,9 @@ namespace app.Services
     public static class CsvSerializer
     {
         public static string Serialize(ISerializable value, string delimiter) {
-            var fields = value.Serialize().Select(f => f?.ToString()).Select(f => string.IsNullOrWhiteSpace(f) ? "" : f.Replace("\\", "\\\\").Replace("\"", "\"\""));
+            var fields = value.Serialize()
+            .Select(f => f?.ToString() ?? "")
+            .Select(f => f.Replace("\\", "\\\\").Replace("\"", "\"\""));
             return string.Join(delimiter, fields);
         }
     }

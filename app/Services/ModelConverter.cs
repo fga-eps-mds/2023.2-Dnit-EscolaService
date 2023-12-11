@@ -1,9 +1,12 @@
 ﻿using api;
+using api.CustoLogistico;
 using api.Escolas;
+using api.Fatores;
 using api.Municipios;
+using api.Planejamento;
+using api.Polos;
 using api.Ranques;
 using api.Solicitacoes;
-using api.Superintendencias;
 using app.Entidades;
 using EnumsNET;
 
@@ -42,9 +45,9 @@ namespace app.Services
                 NumeroTotalDeDocentes = value.TotalDocentes,
                 NumeroTotalDeAlunos = value.TotalAlunos,
                 IdMunicipio = value.MunicipioId,
-                SuperintendenciaId = value.SuperintendenciaId,
-                DistanciaSuperintendencia = value.DistanciaSuperintendencia,
-                UfSuperintendencia = value.Superintendencia?.Uf.ToString(),
+                PoloId = value.PoloId,
+                DistanciaPolo = value.DistanciaPolo,
+                UfPolo = value.Polo?.Uf.ToString(),
                 NomeMunicipio = value.Municipio?.Nome,
                 EtapasEnsino = value.EtapasEnsino?.ConvertAll(e => e.EtapaEnsino),
                 EtapaEnsino = value.EtapasEnsino?.ToDictionary(e => (int)e.EtapaEnsino, e => e.EtapaEnsino.AsString(EnumFormat.Description) ?? ""),
@@ -109,9 +112,10 @@ namespace app.Services
                     EtapaEnsino = escolaRanque.Escola.EtapasEnsino?.ConvertAll(e => ToModel(e.EtapaEnsino)),
                     Municipio = escolaRanque.Escola.Municipio != null ? ToModel(escolaRanque.Escola.Municipio) : null,
                     Uf = escolaRanque.Escola.Uf.HasValue ? ToModel(escolaRanque.Escola.Uf.Value) : null,
-                    Superintendencia = escolaRanque.Escola.Superintendencia != null ? ToModel(escolaRanque.Escola.Superintendencia) : null,
-                    DistanciaSuperintendencia = escolaRanque.Escola.DistanciaSuperintendencia,
+                    Polo = escolaRanque.Escola.Polo != null ? ToModel(escolaRanque.Escola.Polo): null,
+                    DistanciaPolo = escolaRanque.Escola.DistanciaPolo,
                     TemSolicitacao = escolaRanque.Escola.Solicitacao != null,
+                    Ups = escolaRanque.Escola.Ups
                 }
             };
 
@@ -136,8 +140,8 @@ namespace app.Services
                 Localizacao = escola.Localizacao.HasValue ? ToModel(escola.Localizacao.Value) : null,
                 Situacao = escola.Situacao.HasValue ? ToModel(escola.Situacao.Value) : null,
                 EtapasEnsino = escola.EtapasEnsino?.ConvertAll(e => ToModel(e.EtapaEnsino)),
-                Superintendencia = ToModel(escola.Superintendencia),
-                DistanciaSuperintendencia = escola.DistanciaSuperintendencia,
+                Polo = ToModel(escola.Polo),
+                DistanciaPolo = escola.DistanciaPolo,
                 TemSolicitacao = escola.Solicitacao != null,
             };
 
@@ -162,13 +166,69 @@ namespace app.Services
                 Descricao = localizacao.ToString(),
             };
 
-        public SuperintendenciaModel ToModel(Superintendencia superintendencia) =>
-            new SuperintendenciaModel
+        public PoloModel ToModel(Polo polo) =>
+            new PoloModel
             {
-                Id = superintendencia.Id,
-                Uf = superintendencia.Uf,
+                Id = polo.Id,
+                Uf = ToModel(polo.Uf), 
+                Nome = polo.Nome,
+                Municipio = ToModel(polo.Municipio),
+                Cep = polo.Cep,
+                Endereco = polo.Endereco,
+                Latitude = polo.Latitude,
+                Longitude = polo.Longitude,
             };
 
+        public CustoLogisticoItem ToModel(CustoLogistico custoLogistico) =>
+            new CustoLogisticoItem
+            {
+                Custo = custoLogistico.Custo,
+                RaioMin = custoLogistico.RaioMin,
+                RaioMax = custoLogistico.RaioMax,
+                Valor = custoLogistico.Valor,
+            };
+        
+        public FatorPrioriModel ToModel(FatorPriorizacao fatorPriorizacao) =>
+            new FatorPrioriModel
+            {
+                Id = fatorPriorizacao.Id,
+                Nome = fatorPriorizacao.Nome,
+                Peso = fatorPriorizacao.Peso,
+                Ativo = fatorPriorizacao.Ativo,
+                Primario = fatorPriorizacao.Primario,
+                FatorCondicoes = fatorPriorizacao.FatorCondicoes.ConvertAll(ToModel)
+            };
+
+        public FatorPriorizacao ToModel(FatorPrioriModel fator) =>
+            new FatorPriorizacao
+            {
+                Id = fator.Id,
+                Nome = fator.Nome,
+                Peso = fator.Peso,
+                Ativo = fator.Ativo,
+                Primario = fator.Primario,
+                FatorCondicoes = fator.FatorCondicoes.ConvertAll(ToModel)
+            };
+
+        public FatorCondicaoModel ToModel(FatorCondicao fatorCondicao) =>   
+            new FatorCondicaoModel
+            {
+                Id = fatorCondicao.Id,
+                Propriedade = fatorCondicao.Propriedade,
+                Operador = fatorCondicao.Operador,
+                Valores = fatorCondicao.Valores.ConvertAll(v => v.Valor),
+                FatorPriorizacaoId = fatorCondicao.FatorPriorizacaoId
+            };
+
+        public FatorCondicao ToModel(FatorCondicaoModel fatorCondicaoModel) => 
+            new FatorCondicao
+            {
+                Id = fatorCondicaoModel.Id,
+                Propriedade = (PropriedadeCondicao)fatorCondicaoModel.Propriedade,
+                Operador = (OperacaoCondicao)fatorCondicaoModel.Operador,
+                Valores = fatorCondicaoModel.Valores.ConvertAll(v => new CondicaoValor{ FatorCondicaoId = fatorCondicaoModel.Id, Valor = v }),
+            };
+        
         public SolicitacaoAcaoModel ToModel(SolicitacaoAcao solicitacao)
         {
             return new()
@@ -221,9 +281,9 @@ namespace app.Services
                 NumeroTotalDeDocentes = value.TotalDocentes,
                 NumeroTotalDeAlunos = value.TotalAlunos,
                 IdMunicipio = value.MunicipioId,
-                SuperintendenciaId = value.SuperintendenciaId,
-                DistanciaSuperintendencia = value.DistanciaSuperintendencia,
-                UfSuperintendencia = value.Superintendencia?.Uf.ToString(),
+                PoloId = value.PoloId,
+                DistanciaPolo = value.DistanciaPolo,
+                UfPolo = value.Polo?.Uf.ToString(),
                 NomeMunicipio = value.Municipio?.Nome,
                 EtapasEnsino = value.EtapasEnsino?.ConvertAll(e => e.EtapaEnsino),
                 EtapaEnsino = value.EtapasEnsino?.ToDictionary(e => (int)e.EtapaEnsino, e => e.EtapaEnsino.AsString(EnumFormat.Description) ?? ""),
@@ -237,6 +297,79 @@ namespace app.Services
                 NumEscolas = ranque.EscolaRanques.Count(),
                 Descricao = ranque.Descricao,
                 Fatores = fatores
+            };
+        }
+
+        public PropriedadeCondicaoModel ToModel(PropriedadeCondicao propriedadeCondicao) =>
+            new PropriedadeCondicaoModel
+            {
+                Id = (int)propriedadeCondicao,
+                Rotulo = propriedadeCondicao.ToString()
+            };
+        public PlanejamentoMacroMensalModel ToModel(List<PlanejamentoMacroEscola> planejamentoMacroEscola)
+        {
+            if(planejamentoMacroEscola == null || planejamentoMacroEscola.Any(i => i==null))
+            {
+                throw new InvalidOperationException();
+            }
+
+            List<DetalhesEscolaMensal> detalhesEscolaMensal = planejamentoMacroEscola
+                .Select(pme => new DetalhesEscolaMensal
+                {
+                    Id = pme.EscolaId,
+                    UPS = pme.Escola.Ups,
+                    Nome = pme.Escola.Nome,
+                    UF = pme.Escola.Uf,
+                    QuantidadeAlunos = pme.Escola.TotalAlunos,
+                    DistanciaPolo = pme.Escola.DistanciaPolo
+                })
+                .ToList();
+
+            List<DetalhesPorUF> detalhesPorUFs = detalhesEscolaMensal
+                .GroupBy(dem => dem.UF)
+                .Select(gp => new DetalhesPorUF 
+                {
+                    UF = gp.Key,
+                    QuantidadeEscolasTotal = gp.Count()
+                })
+                .ToList();
+
+            var planejamentoMacroMensalModel = new PlanejamentoMacroMensalModel
+            {
+                Mes = planejamentoMacroEscola[0].Mes,
+                Ano = planejamentoMacroEscola[0].Ano,
+                UPSTotal = detalhesEscolaMensal.Sum(dem => dem.UPS),
+                QuantidadeAlunosTotal = detalhesEscolaMensal.Sum(dem => dem.QuantidadeAlunos),
+                QuantidadeEscolasTotal = planejamentoMacroEscola.Count,
+                Escolas = detalhesEscolaMensal,
+                DetalhesPorUF = detalhesPorUFs
+            };
+
+            return planejamentoMacroMensalModel;
+        }
+
+        public PlanejamentoMacroDetalhadoModel ToModel(PlanejamentoMacro planejamentoMacro)
+        {
+            var listaPorMes = planejamentoMacro.Escolas
+                .GroupBy(g => g.Mes)
+                .Select(m => new { l = m.ToList()})
+                .ToList();
+            
+            var planejamentoMacroMensalModels = new List<PlanejamentoMacroMensalModel>();
+            
+            listaPorMes.ForEach(lista => planejamentoMacroMensalModels.Add(ToModel(lista.l)));
+
+            return new PlanejamentoMacroDetalhadoModel
+            {
+                Id = planejamentoMacro.Id,
+                Nome = planejamentoMacro.Nome,
+                Responsavel = planejamentoMacro.Responsavel,
+                MesInicio = planejamentoMacro.MesInicio,
+                MesFim = planejamentoMacro.MesFim,
+                AnoInicio = planejamentoMacro.AnoInicio,
+                AnoFim = planejamentoMacro.AnoFim,
+                QuantidadeAcoes = planejamentoMacro.QuantidadeAcoes,
+                PlanejamentoMacroMensal = planejamentoMacroMensalModels
             };
         }
     }

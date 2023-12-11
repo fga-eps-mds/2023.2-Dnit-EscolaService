@@ -1,7 +1,7 @@
 
 using api.Municipios;
-using api.Superintendencias;
-
+using api.Polos;
+// TODO: consertar namespace inconsistente
 namespace api.Escolas
 {
 
@@ -26,8 +26,8 @@ namespace api.Escolas
         public LocalizacaoModel? Localizacao { get; set; }
         public SituacaoModel? Situacao { get; set; }
         public List<EtapasdeEnsinoModel>? EtapasEnsino { get; set; }
-        public double DistanciaSuperintendencia { get; set; }
-        public SuperintendenciaModel Superintendencia { get; set; }
+        public double DistanciaPolo { get; set; }
+        public PoloModel Polo { get; set; }
         public bool TemSolicitacao { get; set; } = false;
     }
 

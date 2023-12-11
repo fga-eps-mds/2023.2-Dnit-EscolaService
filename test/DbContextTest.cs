@@ -19,6 +19,14 @@ namespace test
         }
 
         [Fact]
+        public void Popula_QuandoNaoExistirCustosLogisticos_DevePopular()
+        {
+            dbContext.PopulaCustosLogisticosPorArquivo(4, Path.Join("..", "..", "..", "..", "app", "Migrations", "Data", "custoslogisticos.csv"));
+
+            Assert.Equal(4, dbContext.CustosLogisticos.Count());
+        }
+
+        [Fact]
         public void Popula_QuandoNaoExistirMunicipio_DevePopular()
         {
             dbContext.PopulaMunicipiosPorArquivo(5, Path.Join("..", "..", "..", "..", "app", "Migrations", "Data", "municipios.csv"));
@@ -27,11 +35,12 @@ namespace test
         }
 
         [Fact]
-        public void Popula_QuandoNaoExistirSuperintendencia_DevePopular()
+        public void Popula_QuandoNaoExistirPolo_DevePopular()
         {
-            dbContext.PopulaSuperintendenciasPorArquivo(5, Path.Join("..", "..", "..", "..", "app", "Migrations", "Data", "superintendencias.csv"));
+            dbContext.PopulaMunicipiosPorArquivo(null, Path.Join("..", "..", "..", "..", "app", "Migrations", "Data", "municipios.csv"));
+            dbContext.PopulaPolosPorArquivo(5, Path.Join("..", "..", "..", "..", "app", "Migrations", "Data", "superintendencias.csv"));
 
-            Assert.Equal(5, dbContext.Superintendencias.Count());
+            Assert.Equal(5, dbContext.Polos.Count());
         }
 
         public new void Dispose()

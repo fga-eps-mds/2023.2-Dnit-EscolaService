@@ -45,10 +45,10 @@ namespace app.Entidades
         public Rede Rede { get; set; }
 
         [Required]
-        public double DistanciaSuperintendencia { get; set; }
-
-        public int? SuperintendenciaId { get; set; }
-        public Superintendencia? Superintendencia { get; set; }
+        public double DistanciaPolo { get; set; }
+        
+        public int? PoloId { get; set; }
+        public Polo? Polo { get; set; }
         public UF? Uf { get; set; }
 
         public Localizacao? Localizacao { get; set; }
@@ -78,20 +78,20 @@ namespace app.Entidades
         {
             return new ()
             {
-                Id, Nome, Codigo, Latitude, Longitude, TotalAlunos, TotalDocentes, Telefone, Uf?.ToString(),
+                Id, Nome, Latitude, Longitude, TotalAlunos, TotalDocentes, Uf?.ToString(),
                 Rede.ToString(), Porte?.AsString(EnumFormat.Description), Localizacao?.AsString(EnumFormat.Description),
                 Situacao?.AsString(EnumFormat.Description), string.Join("_", EtapasEnsino!.Select(e => e.EtapaEnsino.AsString(EnumFormat.Description))),
-                DistanciaSuperintendencia, SuperintendenciaId
+                Codigo, $"({Telefone.Substring(0, 2)}){Telefone.Substring(2)}", PoloId
             };
         }
 
         public static List<string> SerializeHeaders()
         {
             return new() {
-                "Id", "Nome", "Codigo", "Latitude", "Longitude",
-                "TotalAlunos", "TotalDocentes", "Telefone", "Uf",
-                "Rede", "Porte", "Localizacao", "Situacao", "EtapasEnsino",
-                "DistanciaSuperintendencia", "SuperintendenciaId"
+                "Id", "Nome", "Latitude", "Longitude",
+                "TotalAlunos", "TotalDocentes", "Uf",
+                "Rede", "Porte", "Localização", "Situação", "EtapasEnsino",
+                "Codigo", "Telefone", "PoloId", "DistânciaPolo",
             };
         }
     }

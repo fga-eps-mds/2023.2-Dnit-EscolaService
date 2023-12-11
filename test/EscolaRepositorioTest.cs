@@ -44,7 +44,7 @@ namespace test
         }
 
         [Fact]
-        public async void ListarPaginadaAsync_QuandoFiltroForPassado_DeveRetornarListaDeEscolasFiltradas()
+        public async Task ListarPaginadaAsync_QuandoFiltroForPassado_DeveRetornarListaDeEscolasFiltradas()
         {
             var escolaDb = dbContext.PopulaEscolas(5);
 
@@ -67,7 +67,7 @@ namespace test
         }
 
         [Fact]
-        public async void ListarPaginadaAsync_QuandoFiltroNaoExistir_DeveRetornarListaVazia()
+        public async Task ListarPaginadaAsync_QuandoFiltroNaoExistir_DeveRetornarListaVazia()
         {
             dbContext.PopulaEscolas(5);
 

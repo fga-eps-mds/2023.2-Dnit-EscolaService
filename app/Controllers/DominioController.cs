@@ -1,4 +1,5 @@
 ﻿using api;
+using api.Fatores;
 using api.Municipios;
 using app.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -44,6 +45,18 @@ namespace app.Controllers
         public IEnumerable<SituacaoModel> ObterListaSituacao()
         {
             return Enum.GetValues<Situacao>().Select(modelConverter.ToModel).OrderBy(s => s.Descricao);
+        }
+
+        [HttpGet("propriedades")]
+        public IEnumerable<PropriedadeCondicaoModel> ObterPropriedades()
+        {
+            return Enum.GetValues<PropriedadeCondicao>().Select(modelConverter.ToModel).OrderBy(e => e.Id);
+        }
+
+        [HttpGet("porte")]
+        public IEnumerable<PorteModel> ObterPorteEscola()
+        {
+            return Enum.GetValues<Porte>().Select(modelConverter.ToModel).OrderBy(e => e.Id);
         }
     }
 }

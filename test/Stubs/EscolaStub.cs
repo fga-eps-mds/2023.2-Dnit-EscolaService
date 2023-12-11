@@ -31,9 +31,11 @@ namespace test.Stubs
                     TotalAlunos = Random.Shared.Next() % 100 + 1,
                     TotalDocentes = Random.Shared.Next() % 100 + 1,
                     Uf = Enum.GetValues<UF>().TakeRandom().FirstOrDefault(),
-                    Superintendencia = new Superintendencia
+                    Polo = new Polo
                     {
                         Id = Random.Shared.Next(),
+                        Nome = $"Polo DNIT {Random.Shared.Next()}",
+                        Municipio = municipios.TakeRandom().First(),
                         Cep = $"7215436{Random.Shared.Next() % 10}",
                         Endereco = $"Endereço Teste {Random.Shared.Next()}",
                         Uf = Enum.GetValues<UF>().TakeRandom().FirstOrDefault(),

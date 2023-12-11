@@ -54,17 +54,20 @@ namespace app.Services
             dbContext.Ranques.Add(novoRanque);
             await dbContext.SaveChangesAsync();
 
-            for (int pagina = 1; pagina <= totalPaginas; pagina++)
-            {
-                filtro.Pagina = pagina;
-                jobClient.Enqueue<ICalcularUpsJob>((calcularUpsJob) =>
-                    calcularUpsJob.ExecutarAsync(filtro, novoRanque.Id, ExpiracaoMinutos));
-            }
+            jobClient.Enqueue<ICalcularRanqueJob>((calcularRanqueJob) => 
+                calcularRanqueJob.ExecutarAsync(novoRanque.Id, ExpiracaoMinutos));
+
+            // for (int pagina = 1; pagina <= totalPaginas; pagina++)
+            // {
+            //     filtro.Pagina = pagina;
+            //     jobClient.Enqueue<ICalcularUpsJob>((calcularUpsJob) =>
+            //         calcularUpsJob.ExecutarAsync(filtro, novoRanque.Id, ExpiracaoMinutos));
+            // }
 
             // TODO: Calcular outros fatores para a pontuação. 
             // Vai ser feito na US 5.
 
-            await dbContext.SaveChangesAsync();
+            // await dbContext.SaveChangesAsync();
         }
 
         public async Task<ListaPaginada<RanqueEscolaModel>> ListarEscolasUltimoRanqueAsync(PesquisaEscolaFiltro filtro)
@@ -172,11 +175,14 @@ namespace app.Services
             var numEscola = escolas.Count();
 
             foreach(var escola in escolas) {
+                string formatDistanciaPolo = escola.Escola.DistanciaPolo.ToString();
+                formatDistanciaPolo = formatDistanciaPolo.Replace(".", ",");
+                formatDistanciaPolo = $"\"{formatDistanciaPolo}\"";
                 var escolaCsv = CsvSerializer.Serialize(escola.Escola, ";");
-                builder.AppendLine($"{ranque.Id};{ranque.Descricao};{numEscola};{1};{escola.Pontuacao};{escola.Posicao};{escola.Pontuacao};{escolaCsv}");
+                builder.AppendLine($"{ranque.Id};{ranque.Descricao};{numEscola};{1};{escola.Pontuacao};{escola.Posicao};{escola.Pontuacao};{escolaCsv};{formatDistanciaPolo}");
             }
 
-            var bytes = Encoding.UTF8.GetBytes(builder.ToString());
+            var bytes = Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(builder.ToString())).ToArray();
             return new FileContentResult(bytes, "text/csv"){
                 FileDownloadName = $"ranque_{id}.csv",
             };
